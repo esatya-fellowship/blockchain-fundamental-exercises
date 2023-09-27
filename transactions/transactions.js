@@ -45,8 +45,22 @@ async function addPoem() {
 	var transactions = [];
 
 	// TODO: add poem lines as authorized transactions
-	// for (let line of poem) {
-	// }
+	for (let line of poem) {
+		let transaction = createTransaction(line)
+		// console.log(transaction)
+		// let authorizedTransaction = await authorizeTransaction(transaction)
+		// console.log("Authorized transaction: " + authorizedTransaction)
+
+		try {
+			let authorizedTransaction = await authorizeTransaction(transaction)
+			console.log("Authorized transaction: " + authorizedTransaction)
+			transactions.push(authorizedTransaction);
+		} catch (err) {
+			console.log(err);
+		}
+	}
+
+	console.log(transactions);
 
 	var bl = createBlock(transactions);
 
@@ -72,9 +86,9 @@ function createBlock(data) {
 	return bl;
 }
 
-function transactionHash(tr) {
+function transactionHash(transactionData) {
 	return crypto.createHash("sha256").update(
-		`${JSON.stringify(tr.data)}`
+		`${JSON.stringify(transactionData)}`
 	).digest("hex");
 }
 
@@ -143,4 +157,24 @@ async function verifyChain(chain) {
 	}
 
 	return true;
+}
+
+//crete transaction
+function createTransaction(text) {
+	return {
+		data: text,
+		hash: transactionHash(text)
+	};
+}
+
+//authorize transaction
+async function authorizeTransaction(tx) {
+	tx.pubKey = PUB_KEY_TEXT;
+
+	try {
+		let signature = await createSignature(tx.data,PRIV_KEY_TEXT)
+		tx.signature = signature
+	} catch(err) {console.log(err)}
+
+	return tx;
 }
