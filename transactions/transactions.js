@@ -38,19 +38,33 @@ addPoem()
 .then(checkPoem)
 .catch(console.log);
 
-
 // **********************************
-
 async function addPoem() {
 	var transactions = [];
 
 	// TODO: add poem lines as authorized transactions
-	// for (let line of poem) {
-	// }
+	for (let line of poem) {
+		let transaction = createTransaction(line)
+
+		try {
+			let authorizedTransaction = await authorizeTransaction(transaction)
+			transactions.push(authorizedTransaction);
+		} catch (err) {
+			console.log(err);
+		}
+	}
 
 	var bl = createBlock(transactions);
 
 	Blockchain.blocks.push(bl);
+
+	// Verify the entire blockchain
+	const isValid = await verifyChain(Blockchain);
+	if (isValid) {
+		console.log("Blockchain is valid.");
+	} else {
+		console.log("Blockchain is NOT valid.");
+	}
 
 	return Blockchain;
 }
@@ -72,9 +86,9 @@ function createBlock(data) {
 	return bl;
 }
 
-function transactionHash(tr) {
+function transactionHash(transactionData) {
 	return crypto.createHash("sha256").update(
-		`${JSON.stringify(tr.data)}`
+		`${JSON.stringify(transactionData)}`
 	).digest("hex");
 }
 
@@ -129,6 +143,29 @@ async function verifyBlock(bl) {
 		if (!Array.isArray(bl.data)) return false;
 
 		// TODO: verify transactions in block
+		for (let tx of bl.data) {
+			if (!(await verifyTransaction(tx))) return false;
+		}
+	}
+
+	return true;
+}
+
+//Verify transaction
+async function verifyTransaction(tx) {
+	// Check if the transaction has the required fields
+	if (!tx.hasOwnProperty('hash') || !tx.hasOwnProperty('pubKey') || !tx.hasOwnProperty('signature')) {
+		return false;
+	}
+
+	// Verify that the hash matches the computed hash
+	if (tx.hash !== transactionHash(tx.data)) {
+		return false;
+	}
+
+	// Verify the signature
+	if (!(await verifySignature(tx.signature, tx.pubKey))) {
+		return false;
 	}
 
 	return true;
@@ -143,4 +180,24 @@ async function verifyChain(chain) {
 	}
 
 	return true;
+}
+
+//crete transaction
+function createTransaction(text) {
+	return {
+		data: text,
+		hash: transactionHash(text)
+	};
+}
+
+//authorize transaction
+async function authorizeTransaction(tx) {
+	tx.pubKey = PUB_KEY_TEXT;
+
+	try {
+		let signature = await createSignature(tx.data,PRIV_KEY_TEXT)
+		tx.signature = signature
+	} catch(err) {console.log(err)}
+
+	return tx;
 }
