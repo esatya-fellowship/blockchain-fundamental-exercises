@@ -5,6 +5,9 @@ In these exercises, you will learn about blockchains from the perspective of the
 
 - Hashing
 - Transactions
+- Wallet
+- POW
+- Incetives
 
 ## How to Submit Your Assignment on GitHub.
 - Begin by forking the repository to create your personal copy.
