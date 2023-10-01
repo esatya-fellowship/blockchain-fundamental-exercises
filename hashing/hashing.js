@@ -5,6 +5,7 @@ var crypto = require("crypto");
 // The Power of a Smile
 // by Tupac Shakur
 var poem = [
+	"new text",
 	"The power of a gun can kill",
 	"and the power of fire can burn",
 	"the power of wind can chill",
@@ -41,3 +42,9 @@ function blockHash(bl) {
 		// TODO: use block data to calculate hash
 	).digest("hex");
 }
+
+
+
+
+
+
