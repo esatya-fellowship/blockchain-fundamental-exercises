@@ -32,7 +32,7 @@ Blockchain.blocks.push({
 //loops the poem , first creates a block and notifes if block has been added. 
  for (let line of poem) {
  const newBlock = createBlock(line);
- Blockchain.Blocks.push(newBlock);
+ Blockchain.blocks.push(newBlock);
  //Concept of push in a stack 
  console.log(`A new block has been added:`);
  }
@@ -45,11 +45,11 @@ Blockchain.blocks.push({
 
 function createBlock(data){
 //get previous block
-const previousBlock = Blockchain.Blocks[Blockchain.Blocks.length-1];
+const previousBlock = Blockchain.blocks[Blockchain.blocks.length-1];
 
 //create new block
 const newBlock={
-index:Blockchain.Blocks.length,
+index:Blockchain.blocks.length,
 prevHash:previousBlock.hash,
 data:data,
 timestamp:Date.now(),
@@ -58,28 +58,28 @@ hash:blockHash(newBlock),
 return newBlock;
 }
 
-function verifyChain(Blockchain){
-for(let i=0 ; i<Blockchain.Blocks.length; i++){
-const Block = Blockchain.Blocks[i];
+function verifyChain(chain){
+for(let i=0 ; i<Blockchain.blocks.length; i++){
+const block = Blockchain.blocks[i];
 
 //data must be non-empty
-if(Block.data === " "){
+if(block.data === " "){
 return false;
 }
 
 //for the genesis block only, the hash must be "000000"
-if(Block.index === 0 && Block.hash !== "000000"){
+if(block.index === 0 && block.hash !== "000000"){
 return false;
 }
 
 //prevHash must be non-empty
-if(Block.prevHash === " "){
+if(block.prevHash === " "){
 return false;
 }
 
 //index must be an integer >= 0
 //since it's must be we do isn't 
-if(!Number.isinteger(Block.index) || Block.index<0){
+if(!Number.isinteger(block.index) || block.index<0){
 return false;
 }
 
@@ -87,7 +87,9 @@ return false;
 // still to be completed and checked.
 
 //the hash must match what recomputing the hash with blockHash(..) produces
-
+if(block.hash !== block.prevHash){
+	return false;
+}
 }
 
 
