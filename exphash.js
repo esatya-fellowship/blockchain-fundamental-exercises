@@ -1,4 +1,4 @@
-//const keccak256 = require('keccak256');
+const keccak256 = require('keccak256');
 //sha256 = f(message)
 //keccak256 = f(i)
 
