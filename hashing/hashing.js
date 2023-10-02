@@ -23,21 +23,77 @@ var Blockchain = {
 Blockchain.blocks.push({
 	index: 0,
 	hash: "000000",
+	prevhash:"",
 	data: "",
 	timestamp: Date.now(),
 });
 
-// TODO: insert each line into blockchain
-// for (let line of poem) {
-// }
 
-// console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
+
+// TODO: insert each line into blockchain
+async function createBlocks() {
+    for (let i = 0; i < poem.length; i++) {
+        const generatedHash = blockHash(poem[i], i);
+        Blockchain.blocks.push({
+            index: i + 1,
+			prevhash:Blockchain.blocks[i].hash,
+            hash: generatedHash,
+            data: poem[i],
+            timestamp: Date.now(),
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 100)); 
+    }
+}
+
+createBlocks().then(() => {
+    //console.log("Blockchain:", JSON.stringify(Blockchain, null, 2)); ----> correct
+	console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
+
+});
+
+
 
 
 // **********************************
 
-function blockHash(bl) {
+function blockHash(bl, num) {
+	const dataToHash = JSON.stringify(bl) + Blockchain.blocks[num].hash;
+	console.log("Data To Hash=",dataToHash); 
+
 	return crypto.createHash("sha256").update(
-		// TODO: use block data to calculate hash
+		dataToHash
 	).digest("hex");
+}
+
+function blocks() {
+	for (var i = 0; i < poem.length; i++) {
+		console.log(`${i} block = `, Blockchain.blocks[i])
+	}
+
+}
+
+function verifyChain(Blockchain){
+	const length= Blockchain.blocks.length;
+	//console.log(length); ----> 9
+	var verification = true;
+	var i = 1;
+	while(i<=length-1){
+
+		console.log(Blockchain.blocks[i-1].hash,' ',Blockchain.blocks[i].prevhash);
+
+		if (Blockchain.blocks[i-1].hash===Blockchain.blocks[i].prevhash){
+			i++;
+		}
+		else{
+			verification=false;
+			break;
+		}
+	}
+	if (verification){
+		return "The Blockchain is correct";
+	}
+	else{
+		return "The Blockchain is not correct"
+	}
 }
