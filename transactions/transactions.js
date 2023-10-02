@@ -41,18 +41,58 @@ addPoem()
 
 // **********************************
 
+function createTransaction(data){
+	return {
+		data:data,
+		hash:transactionHash(data)
+	}
+}
+
+async function authorizeTransaction(transaction){
+	transaction.pubKey = PUB_KEY_TEXT;
+	try{
+		let signature=await createSignature(transaction.data,PRIV_KEY_TEXT)
+		transaction.signature=signature
+	}
+	catch(err){
+		console.log(err)
+	}
+	return transaction;
+	
+}
+
 async function addPoem() {
 	var transactions = [];
+	for (let line of poem){
+		let transaction=createTransaction(line)
+		try{
+			let authorized=await authorizeTransaction(transaction);
+			transactions.push(authorized);
 
+		}
+		catch(err){
+			console.log(err)
+		}
+	}
 	// TODO: add poem lines as authorized transactions
 	// for (let line of poem) {
 	// }
+
+	
 
 	var bl = createBlock(transactions);
 
 	Blockchain.blocks.push(bl);
 
+
+	const isValid=await verifyChain(Blockchain);
+	if(isValid){
+		console.log("Valid")
+	}else{
+		console.log("Not valid")
+	}
 	return Blockchain;
+
 }
 
 async function checkPoem(chain) {
@@ -128,7 +168,32 @@ async function verifyBlock(bl) {
 		if (bl.hash !== blockHash(bl)) return false;
 		if (!Array.isArray(bl.data)) return false;
 
+
 		// TODO: verify transactions in block
+		for (let tx of bl.data) {
+			if (!(await verifyTransaction(tx))) return false;
+		}
+	}
+
+	return true;
+}
+
+//Verify transaction
+async function verifyTransaction(transaction) {
+	
+	// Check fields
+	if (!transaction.hasOwnProperty('hash') || !transaction.hasOwnProperty('pubKey') || !transaction.hasOwnProperty('signature')) {
+		return false;
+	}
+
+	// VCheck hash match
+	if (transaction.hash !== transactionHash(transaction.data)) {
+		return false;
+	}
+
+	// Verify the necessary signatues
+	if (!(await verifySignature(transaction.signature, transaction.pubKey))) {
+		return false;
 	}
 
 	return true;
@@ -144,3 +209,4 @@ async function verifyChain(chain) {
 
 	return true;
 }
+
