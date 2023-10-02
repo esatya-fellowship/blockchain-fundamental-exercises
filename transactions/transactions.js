@@ -40,20 +40,32 @@ addPoem()
 
 
 // **********************************
-
+function createTransaction(data){
+	return {
+		data:data,
+		hash:transactionHash(data)
+	}
+}
+async function authorizeTransaction(transaction) {
+	// Add the public key text to the transaction object
+	transaction.pubKey = PUB_KEY_TEXT;
+  
+	// Create a signature by awaiting a call to createSignature(...)
+	transaction.signature = await createSignature(transaction.data, PRIV_KEY_TEXT)
+	return transaction;
+  }
 async function addPoem() {
 	var transactions = [];
 
-	// TODO: add poem lines as authorized transactions
-	// for (let line of poem) {
-	// }
-
+	// Add poem lines as authorized transactions
+	for (let line of poem) {
+	  var transaction = createTransaction(line);
+	  transactions.push(transaction);
+	} 
 	var bl = createBlock(transactions);
-
 	Blockchain.blocks.push(bl);
-
 	return Blockchain;
-}
+  }
 
 async function checkPoem(chain) {
 	console.log(await verifyChain(chain));
@@ -128,12 +140,36 @@ async function verifyBlock(bl) {
 		if (bl.hash !== blockHash(bl)) return false;
 		if (!Array.isArray(bl.data)) return false;
 
-		// TODO: verify transactions in block
+		//verifying transactions in block
+		for (const transaction of bl.data) {
+			if (!verifyTransaction(transaction)) return false;
+		  }
 	}
 
 	return true;
 }
+async function verifyTransaction(transaction) {
+  // Check if the transaction has the required fields
+  if (
+    !transaction.hasOwnProperty("data") ||
+    !transaction.hasOwnProperty("pubKey") ||
+    !transaction.hasOwnProperty("signature")
+  ) {
+    return false;
+  }
 
+  // Verify that the transaction's hash matches the computed hash
+  if (transaction.hash !== transactionHash({ data: transaction.data })) {
+    return false;
+  }
+
+  // Verify the signature of the transaction
+  if (!(await verifySignature(transaction.signature, transaction.pubKey))) {
+    return false;
+  }
+
+  return true;
+}
 async function verifyChain(chain) {
 	var prevHash;
 	for (let bl of chain.blocks) {
@@ -141,6 +177,5 @@ async function verifyChain(chain) {
 		if (!(await verifyBlock(bl))) return false;
 		prevHash = bl.hash;
 	}
-
 	return true;
 }
