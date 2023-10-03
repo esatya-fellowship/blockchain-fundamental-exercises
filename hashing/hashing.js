@@ -23,21 +23,52 @@ var Blockchain = {
 Blockchain.blocks.push({
 	index: 0,
 	hash: "000000",
-	data: "",
+	data: "Genesis block",
 	timestamp: Date.now(),
+	previousHash: null, 
 });
 
 // TODO: insert each line into blockchain
-// for (let line of poem) {
-// }
+for (let line of poem) {
+	const newBlock = {
+	  index: Blockchain.blocks.length,
+	  data: line,
+	  timestamp: Date.now(),
+	  previousHash: Blockchain.blocks[Blockchain.blocks.length - 1].hash, // Set previousHash for new blocks
+	};
+  
+	insertBlock(Blockchain, newBlock);
+}
+  
+	
 
-// console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
-
-
-// **********************************
+function verifyChain(blockchain) {
+	for (let i = 1; i < blockchain.blocks.length; i++) {
+	  const currentBlock = blockchain.blocks[i];
+	  const previousBlock = blockchain.blocks[i - 1];
+  
+	  if (currentBlock.hash !== blockHash(currentBlock)) {
+		return false;
+	  }
+  
+	  if (currentBlock.previousHash !== previousBlock.hash) {
+		return false;
+	  }
+	}
+  
+	return true;
+}
+  
+  console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
+  
+  function insertBlock(blockchain, newBlock) {
+	blockchain.blocks.push(newBlock);
+}
+  
 
 function blockHash(bl) {
 	return crypto.createHash("sha256").update(
-		// TODO: use block data to calculate hash
+	  JSON.stringify(bl)
 	).digest("hex");
 }
+  
